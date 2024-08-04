@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_CONNECTION_URL")
+}
+
+model Category {
+  id            String        @id @default(uuid())
+  name          String        @unique
+  subcategories Subcategory[]
+}
+
+model Subcategory {
+  id         String      @id @default(uuid())
+  name       String      @unique
+  category   Category    @relation(fields: [categoryId], references: [id])
+  categoryId String
+  characters Character[]
+  episodes   Episode[]
+}
+
+model StatusType {
+  id       String   @id @default(uuid())
+  name     String   @unique
+  statuses Status[]
+}
+
+model Status {
+  id           String      @id @default(uuid())
+  name         String      @unique
+  statusType   StatusType  @relation(fields: [statusTypeId], references: [id])
+  statusTypeId String
+  characters   Character[]
+  episodes     Episode[]
+}
+
+model Character {
+  id                String       @id @default(uuid())
+  name              String
+  gender            Gender
+  characterStatus   Status       @relation(fields: [characterStatusId], references: [id])
+  characterStatusId String
+  species           Subcategory  @relation(fields: [speciesId], references: [id])
+  speciesId         String
+  createdAt         DateTime     @default(now())
+  appearances       Appearance[]
+}
+
+model Episode {
+  id              String       @id @default(uuid())
+  name            String
+  aireDate        DateTime
+  code            String
+  episodeStatus   Status       @relation(fields: [epsiodeStatusId], references: [id])
+  epsiodeStatusId String
+  season          Subcategory  @relation(fields: [seasonId], references: [id])
+  seasonId        String
+  minutesDuration Int
+  secondsDuration Int
+  appearances     Appearance[]
+}
+
+model Appearance {
+  id           String    @id @default(uuid())
+  character    Character @relation(fields: [characterId], references: [id])
+  characterId  String
+  episode      Episode   @relation(fields: [episodeId], references: [id])
+  episodeId    String
+  initMinute   Int
+  initSecond   Int
+  finishMinute Int
+  finishSecond Int
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  GENDERLESS
+  UNKNOWN
+}
