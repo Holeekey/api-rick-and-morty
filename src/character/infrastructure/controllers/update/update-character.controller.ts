@@ -14,6 +14,8 @@ import {
 import { ErrorDecorator } from 'src/common/application/decorators/error.handler.decorator';
 import { CharacterRepositoryPostgres } from '../../repositories/postgres/chatacter.repository';
 import { UpdateCharacterCommand } from 'src/character/application/commands/update/update-character.command';
+import { SpeciesRepositoryPostgres } from '../../repositories/postgres/species.repository';
+import { CharacterStatusRepositoryPostgres } from '../../repositories/postgres/status.repository';
 
 @ApiTags(CHARACTER_API_TAG)
 @Controller(CHARACTER_PREFIX)
@@ -24,7 +26,11 @@ export class UpdateCharacterController
       UpdateCharacterResponse
     >
 {
-  constructor(private characterRepository: CharacterRepositoryPostgres) {}
+  constructor(
+    private characterRepository: CharacterRepositoryPostgres,
+    private speciesRepository: SpeciesRepositoryPostgres,
+    private statusRepository: CharacterStatusRepositoryPostgres,
+  ) {}
 
   @Patch(':id')
   async execute(
@@ -32,7 +38,11 @@ export class UpdateCharacterController
     @Body() body: UpdateCharacterDTO,
   ): Promise<UpdateCharacterResponse> {
     const result = await new ErrorDecorator(
-      new UpdateCharacterCommand(this.characterRepository),
+      new UpdateCharacterCommand(
+        this.characterRepository,
+        this.speciesRepository,
+        this.statusRepository,
+      ),
       (e) => new HttpException(e.message, 400),
     ).execute({
       id: param,

@@ -5,11 +5,17 @@ import { Result } from 'src/common/application/result-handler/result.handler';
 import { CharacterRepository } from '../../repositories/character.repository';
 import { characterNotFoundError } from '../../errors/character.not.found';
 import { CharacterStatus } from '../../models/character';
+import { CharacterStatusRepository } from '../../repositories/status.repository';
+import { SpeciesRepository } from '../../repositories/species.repository';
 
 export class DeleteCharacterCommand
   implements ApplicationService<DeleteCharacterDTO, DeleteCharacterResponse>
 {
-  constructor(private characterRepository: CharacterRepository) {}
+  constructor(
+    private characterRepository: CharacterRepository,
+    private speciesRepository: SpeciesRepository,
+    private statusRepository: CharacterStatusRepository,
+  ) {}
 
   async execute(
     data: DeleteCharacterDTO,
@@ -20,10 +26,19 @@ export class DeleteCharacterCommand
       return Result.error(characterNotFoundError());
     }
 
-    character.status = CharacterStatus.SUSPENDED;
+    character.statusId = (
+      await this.statusRepository.getByName(CharacterStatus.SUSPENDED)
+    ).id;
 
     await this.characterRepository.save(character);
 
-    return Result.success(character);
+    return Result.success({
+      id: character.id,
+      name: character.name,
+      species: (await this.speciesRepository.getById(character.speciesId)).name,
+      status: (await this.statusRepository.getById(character.statusId)).name,
+      gender: character.gender,
+      createdAt: character.createdAt,
+    });
   }
 }
