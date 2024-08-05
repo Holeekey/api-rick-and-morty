@@ -7,7 +7,7 @@ export class FindManyEpisodesDTO {
   @ApiProperty()
   @Min(1)
   @Type(() => Number)
-  page: number;
+  page: number = 1;
 
   @ApiProperty({
     required: false,
