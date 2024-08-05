@@ -4,10 +4,12 @@ import { IsIn, IsOptional, IsString, Min } from 'class-validator';
 import { CharacterStatus } from 'src/character/application/models/character';
 
 export class FindManyCharactersDTO {
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
   @Min(1)
   @Type(() => Number)
-  page: number;
+  page: number = 1;
 
   @ApiProperty({
     required: false,
