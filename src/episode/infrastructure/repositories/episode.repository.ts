@@ -1,5 +1,5 @@
 import { PrismaService } from 'src/common/infrastruture/database/database.connection.service';
-import { Episode } from '../../application/models/episode';
+import { Episode, EpisodeStatus } from '../../application/models/episode';
 import { EpisodeRepository } from '../../application/repositories/episode.repository';
 import { Optional } from 'src/common/application/optional/optional';
 import { Result } from 'src/common/application/result-handler/result.handler';
@@ -8,6 +8,64 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class EpisodeRepositoryPostgres implements EpisodeRepository {
   constructor(private prisma: PrismaService) {}
+
+  private statusMapperToORM(status: EpisodeStatus): string {
+    return status === EpisodeStatus.ACTIVE ? 'ACTIVE_E' : 'CANCELLED';
+  }
+
+  async count(season?: string, status?: EpisodeStatus) {
+    let statusId;
+    let seasonId;
+
+    if (season && status) {
+      seasonId = (
+        await this.prisma.subcategory.findUnique({ where: { name: season } })
+      ).id;
+
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+
+      return await this.prisma.episode.count({
+        where: {
+          seasonId: seasonId,
+          epsiodeStatusId: statusId,
+        },
+      });
+    }
+
+    if (season) {
+      seasonId = (
+        await this.prisma.subcategory.findUnique({ where: { name: season } })
+      ).id;
+
+      return await this.prisma.episode.count({
+        where: {
+          seasonId: seasonId,
+        },
+      });
+    }
+
+    if (status) {
+      console.log();
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+      return await this.prisma.episode.count({
+        where: {
+          epsiodeStatusId: statusId,
+        },
+      });
+    }
+
+    const count = await this.prisma.episode.count();
+
+    return count;
+  }
 
   async upsertSeason(season: string) {
     await this.prisma.subcategory.upsert({
@@ -44,9 +102,15 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
       },
     });
 
-    const episodes = episodesORM.map(
-      (e) =>
-        ({
+    const episodes = Promise.all(
+      episodesORM.map(async (e) => {
+        const appearancesId = (
+          await this.prisma.appearance.findMany({
+            where: { episodeId: e.id },
+          })
+        ).map((a) => a.id);
+
+        return {
           id: e.id,
           name: e.name,
           aireDate: e.aireDate,
@@ -55,7 +119,9 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
           secondsDuration: e.secondsDuration,
           seasonId: e.seasonId,
           statusId: e.epsiodeStatusId,
-        }) as Episode,
+          appearancesId: appearancesId,
+        } as Episode;
+      }),
     );
 
     return episodes;
@@ -64,6 +130,12 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
     const episode = await this.prisma.episode.findUnique({ where: { id: id } });
 
     if (!episode) return undefined;
+
+    const appearancesId = (
+      await this.prisma.appearance.findMany({
+        where: { episodeId: episode.id },
+      })
+    ).map((a) => a.id);
 
     return {
       id: episode.id,
@@ -74,6 +146,7 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
       statusId: episode.epsiodeStatusId,
       minutesDuration: episode.minutesDuration,
       secondsDuration: episode.secondsDuration,
+      appearancesId: appearancesId,
     };
   }
   async save(episode: Episode): Promise<Result<Episode>> {

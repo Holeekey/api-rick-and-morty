@@ -10,4 +10,5 @@ export type FindOneCharacterResponse = {
   species: string;
   gender: Gender;
   createdAt: Date;
+  appearancesId: string[];
 };

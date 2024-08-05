@@ -14,10 +14,58 @@ import { PrismaService } from 'src/common/infrastruture/database/database.connec
 export class CharacterRepositoryPostgres implements CharacterRepository {
   constructor(private prisma: PrismaService) {}
 
-  private statusMapperToModel(status: string): CharacterStatus {
-    return status === 'ACTIVE_C'
-      ? CharacterStatus.ACTIVE
-      : CharacterStatus.SUSPENDED;
+  async count(species?: string, status?: CharacterStatus): Promise<number> {
+    let statusId;
+    let speciesId;
+
+    if (species && status) {
+      speciesId = (
+        await this.prisma.subcategory.findUnique({ where: { name: species } })
+      ).id;
+
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+
+      return await this.prisma.character.count({
+        where: {
+          speciesId: speciesId,
+          characterStatusId: statusId,
+        },
+      });
+    }
+
+    if (species) {
+      speciesId = (
+        await this.prisma.subcategory.findUnique({ where: { name: species } })
+      ).id;
+
+      return await this.prisma.character.count({
+        where: {
+          speciesId: speciesId,
+        },
+      });
+    }
+
+    if (status) {
+      console.log();
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+      return await this.prisma.character.count({
+        where: {
+          characterStatusId: statusId,
+        },
+      });
+    }
+
+    const count = await this.prisma.character.count();
+
+    return count;
   }
 
   private statusMapperToORM(status: CharacterStatus): string {
@@ -61,27 +109,24 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
 
     const characters = Promise.all(
       charactersORM.map(async (c) => {
-        const statusORMName = (
-          await this.prisma.status.findFirst({
-            where: { id: c.characterStatusId },
-          })
-        ).name;
-
-        const status = this.statusMapperToModel(statusORMName);
-
         const gender = this.genderMapperToModel(c.gender);
+
+        const appearancesId = (
+          await this.prisma.appearance.findMany({
+            where: {
+              characterId: c.id,
+            },
+          })
+        ).map((a) => a.id);
 
         return {
           id: c.id,
           name: c.name,
-          status: status,
+          statusId: c.characterStatusId,
           createdAt: c.createdAt,
           gender: gender,
-          species: (
-            await this.prisma.subcategory.findFirst({
-              where: { id: c.speciesId },
-            })
-          ).name,
+          speciesId: c.speciesId,
+          appearancesId,
         } as Character;
       }),
     );
@@ -94,50 +139,26 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
       where: { id: id },
     });
 
-    const status = (
-      await this.prisma.status.findUnique({
-        where: { id: characterORM.characterStatusId },
+    const appearancesId = (
+      await this.prisma.appearance.findMany({
+        where: {
+          characterId: characterORM.id,
+        },
       })
-    ).name;
-
-    const species = (
-      await this.prisma.subcategory.findUnique({
-        where: { id: characterORM.speciesId },
-      })
-    ).name;
+    ).map((a) => a.id);
 
     return {
       id: id,
       name: characterORM.name,
       createdAt: characterORM.createdAt,
-      status: this.statusMapperToModel(status),
-      species: species,
+      statusId: characterORM.characterStatusId,
+      speciesId: characterORM.speciesId,
       gender: this.genderMapperToModel(characterORM.gender),
+      appearancesId: appearancesId,
     };
   }
 
   async save(character: Character): Promise<Result<Character>> {
-    const statusId = (
-      await this.prisma.status.findUnique({
-        where: { name: this.statusMapperToORM(character.status) },
-      })
-    ).id;
-
-    const speciesId = (
-      await this.prisma.subcategory.upsert({
-        where: { name: character.species },
-        create: {
-          name: character.species,
-          categoryId: (
-            await this.prisma.category.findUnique({
-              where: { name: 'SPECIES' },
-            })
-          ).id,
-        },
-        update: {},
-      })
-    ).id;
-
     await this.prisma.character.upsert({
       where: {
         id: character.id,
@@ -146,15 +167,15 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
         id: character.id,
         name: character.name,
         gender: this.genderMapperToORM(character.gender),
-        characterStatusId: statusId,
-        speciesId: speciesId,
+        characterStatusId: character.statusId,
+        speciesId: character.speciesId,
         createdAt: character.createdAt,
       },
       update: {
         name: character.name,
         gender: this.genderMapperToORM(character.gender),
-        characterStatusId: statusId,
-        speciesId: speciesId,
+        characterStatusId: character.statusId,
+        speciesId: character.speciesId,
         createdAt: character.createdAt,
       },
     });
@@ -163,26 +184,14 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
   }
 
   async existsBySpeciesAndStatus(character: Character): Promise<boolean> {
-    const possibleSpecies = (
-      await this.prisma.subcategory.findUnique({
-        where: { name: character.species },
-      })
-    )?.id;
-
-    const statusId = (
-      await this.prisma.status.findUnique({
-        where: { name: this.statusMapperToORM(character.status) },
-      })
-    ).id;
-
     const possibleCharacter = await this.prisma.character.findFirst({
       where: {
         id: {
           not: character.id,
         },
         name: character.name,
-        characterStatusId: statusId,
-        speciesId: possibleSpecies,
+        characterStatusId: character.statusId,
+        speciesId: character.speciesId,
       },
     });
 

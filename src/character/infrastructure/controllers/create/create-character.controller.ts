@@ -9,6 +9,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { Body, Controller, HttpException, Post } from '@nestjs/common';
 import { ErrorDecorator } from 'src/common/application/decorators/error.handler.decorator';
 import { CreateCharacterCommand } from 'src/character/application/commands/create/create-character.command';
+import { SpeciesRepositoryPostgres } from '../../repositories/postgres/species.repository';
+import { CharacterStatusRepositoryPostgres } from '../../repositories/postgres/status.repository';
 
 @ApiTags(CHARACTER_API_TAG)
 @Controller(CHARACTER_PREFIX)
@@ -20,6 +22,8 @@ export class CreateCharacterController
     private idGenerator: ConcreteUUIDGenerator,
     private dateProvider: ConcreteDateProvider,
     private characterRepository: CharacterRepositoryPostgres,
+    private speciesRepository: SpeciesRepositoryPostgres,
+    private statusRepository: CharacterStatusRepositoryPostgres,
   ) {}
 
   @Post()
@@ -31,6 +35,8 @@ export class CreateCharacterController
         this.idGenerator,
         this.dateProvider,
         this.characterRepository,
+        this.speciesRepository,
+        this.statusRepository,
       ),
       (e) => new HttpException(e.message, 400),
     ).execute({

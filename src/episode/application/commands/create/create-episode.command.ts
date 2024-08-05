@@ -35,6 +35,7 @@ export class CreateEpisodeCommand
         .id,
       minutesDuration: data.minutesDuration,
       secondsDuration: data.secondsDuration,
+      appearancesId: [],
     } as Episode;
 
     if (episode.minutesDuration >= 60 && episode.secondsDuration >= 1) {

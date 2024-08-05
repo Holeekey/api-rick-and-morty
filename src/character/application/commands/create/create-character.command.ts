@@ -7,6 +7,8 @@ import { DateProvider } from 'src/common/application/date/date.provider';
 import { Character, CharacterStatus } from '../../models/character';
 import { CharacterRepository } from '../../repositories/character.repository';
 import { characterSpeciesStatusFoundError } from '../../errors/character.exists.by.species.and.status';
+import { CharacterStatusRepository } from '../../repositories/status.repository';
+import { SpeciesRepository } from '../../repositories/species.repository';
 
 export class CreateCharacterCommand
   implements ApplicationService<CreateCharacterDTO, CreateCharacterResponse>
@@ -15,6 +17,8 @@ export class CreateCharacterCommand
     private idGenerator: IDGenerator<string>,
     private dateProvider: DateProvider,
     private characterRepository: CharacterRepository,
+    private speciesRepository: SpeciesRepository,
+    private statusRepository: CharacterStatusRepository,
   ) {}
 
   async execute(
@@ -24,9 +28,12 @@ export class CreateCharacterCommand
       id: this.idGenerator.generate(),
       name: data.name,
       gender: data.gender,
-      species: data.species,
-      status: CharacterStatus.ACTIVE,
+      speciesId: (await this.speciesRepository.upsert(data.species)).unwrap()
+        .id,
+      statusId: (await this.statusRepository.getByName(CharacterStatus.ACTIVE))
+        .id,
       createdAt: this.dateProvider.current,
+      appearancesId: [],
     };
 
     if (await this.characterRepository.existsBySpeciesAndStatus(character)) {

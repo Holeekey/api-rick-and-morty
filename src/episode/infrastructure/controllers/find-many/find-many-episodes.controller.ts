@@ -1,6 +1,6 @@
 import { ControllerContract } from 'src/common/infrastruture/controller/contract/controller.contract';
-import { FindManyEpisodesDTO } from './dto/find-many-episodes.dto';
-import { FindManyEpisodesResponse } from 'src/episode/application/queries/find-many/types/response';
+import { FindManyEpisodesDTO } from './types/find-many-episodes.dto';
+import { FindManyEpisodesResponse } from './types/find-many-episodes.response';
 import { EPISODE_PREFIX, EPISODE_API_TAG } from '../prefix';
 import { Controller, Get, HttpException, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -9,15 +9,13 @@ import { FindManyEpisodesQuery } from 'src/episode/application/queries/find-many
 import { EpisodeRepositoryPostgres } from '../../repositories/episode.repository';
 import { SeasonRepositoryPostgres } from '../../repositories/season.repository';
 import { EpisodeStatusRepositoryPostgres } from '../../repositories/status.repository';
+import { durationToString } from 'src/common/infrastruture/utils/duration.to.string';
 
 @ApiTags(EPISODE_API_TAG)
 @Controller(EPISODE_PREFIX)
 export class FindManyEpisodesController
   implements
-    ControllerContract<
-      [query: FindManyEpisodesDTO],
-      FindManyEpisodesResponse[]
-    >
+    ControllerContract<[query: FindManyEpisodesDTO], FindManyEpisodesResponse>
 {
   constructor(
     private episodeRepository: EpisodeRepositoryPostgres,
@@ -28,7 +26,7 @@ export class FindManyEpisodesController
   @Get()
   async execute(
     @Query() query: FindManyEpisodesDTO,
-  ): Promise<FindManyEpisodesResponse[]> {
+  ): Promise<FindManyEpisodesResponse> {
     const result = await new ErrorDecorator(
       new FindManyEpisodesQuery(
         this.episodeRepository,
@@ -43,6 +41,63 @@ export class FindManyEpisodesController
       status: query.status,
     });
 
-    return result.unwrap();
+    const count = await this.episodeRepository.count(
+      query.season,
+      query.status,
+    );
+
+    const pages = Math.ceil(count / 5);
+
+    const nextPage = query.page + 1;
+    const prevPage = query.page - 1;
+
+    const baseUrl = process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/';
+
+    const baseUrlWithEpisodePrefix = baseUrl + 'episode/';
+
+    const pageQuery = '?page=';
+
+    const seasonQuery = query.season ? '&season=' + query.season : '';
+    const statusQuery = query.status ? '&status=' + query.status : '';
+
+    const episodes = result.unwrap();
+
+    return {
+      info: {
+        count: count,
+        pages: pages,
+        next:
+          nextPage > pages
+            ? null
+            : baseUrlWithEpisodePrefix +
+              pageQuery +
+              (query.page + 1) +
+              seasonQuery +
+              statusQuery,
+        prev:
+          prevPage <= 0
+            ? null
+            : baseUrlWithEpisodePrefix +
+              pageQuery +
+              (query.page - 1) +
+              seasonQuery +
+              statusQuery,
+      },
+      results: episodes.map((e) => {
+        return {
+          id: e.id,
+          name: e.name,
+          code: e.code,
+          aireDate: e.aireDate,
+          season: e.season,
+          status: e.status,
+          duration: durationToString(e.minutesDuration, e.secondsDuration),
+          url: baseUrlWithEpisodePrefix + e.id,
+          appearancesUrl: e.appearancesId.map(
+            (a) => baseUrl + 'appearance/' + a,
+          ),
+        };
+      }),
+    };
   }
 }

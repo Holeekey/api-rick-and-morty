@@ -4,11 +4,17 @@ import { FindOneCharacterResponse } from './types/response';
 import { Result } from 'src/common/application/result-handler/result.handler';
 import { CharacterRepository } from '../../repositories/character.repository';
 import { characterNotFoundError } from '../../errors/character.not.found';
+import { SpeciesRepository } from '../../repositories/species.repository';
+import { CharacterStatusRepository } from '../../repositories/status.repository';
 
 export class FindOneCharacterQuery
   implements ApplicationService<FindOneCharacterDTO, FindOneCharacterResponse>
 {
-  constructor(private characterRepository: CharacterRepository) {}
+  constructor(
+    private characterRepository: CharacterRepository,
+    private speciesRepository: SpeciesRepository,
+    private statusRepository: CharacterStatusRepository,
+  ) {}
 
   async execute(
     data: FindOneCharacterDTO,
@@ -19,6 +25,17 @@ export class FindOneCharacterQuery
       return Result.error(characterNotFoundError());
     }
 
-    return Result.success(possibleCharacter);
+    return Result.success({
+      id: possibleCharacter.id,
+      name: possibleCharacter.name,
+      gender: possibleCharacter.gender,
+      species: (
+        await this.speciesRepository.getById(possibleCharacter.speciesId)
+      ).name,
+      status: (await this.statusRepository.getById(possibleCharacter.statusId))
+        .name,
+      createdAt: possibleCharacter.createdAt,
+      appearancesId: possibleCharacter.appearancesId,
+    });
   }
 }

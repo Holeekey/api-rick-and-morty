@@ -185,6 +185,10 @@ export class SeedController implements ControllerContract<[], any> {
             });
           }
 
+          const getRandomInt = (max: number) => {
+            return Math.floor(Math.random() * max);
+          };
+
           await this.prisma.episode.create({
             data: {
               id: this.idGenerator.generate(),
@@ -192,8 +196,8 @@ export class SeedController implements ControllerContract<[], any> {
               code: apiEpisode.episode,
               seasonId: seasonId,
               aireDate: new Date(apiEpisode.air_date),
-              minutesDuration: 0,
-              secondsDuration: 0,
+              minutesDuration: getRandomInt(4) + 19,
+              secondsDuration: getRandomInt(59),
               epsiodeStatusId: activeEpisodeStatusId,
             },
           });

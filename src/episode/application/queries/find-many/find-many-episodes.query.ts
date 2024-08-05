@@ -62,6 +62,7 @@ export class FindManyEpisodesQuery
           secondsDuration: e.secondsDuration,
           season: season.name,
           status: status.name,
+          appearancesId: e.appearancesId,
         } as FindManyEpisodesResponse;
       }),
     );

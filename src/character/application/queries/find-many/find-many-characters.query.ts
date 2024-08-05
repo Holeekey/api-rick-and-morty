@@ -44,6 +44,20 @@ export class FindManyCharactersQuery
       possibleStatus?.id,
     );
 
-    return Result.success(characters);
+    return Result.success(
+      await Promise.all(
+        characters.map(async (c) => {
+          return {
+            id: c.id,
+            name: c.name,
+            species: (await this.speciesRepository.getById(c.speciesId)).name,
+            status: (await this.statusRepository.getById(c.statusId)).name,
+            gender: c.gender,
+            createdAt: c.createdAt,
+            appearancesId: c.appearancesId,
+          } as FindManyCharactersResponse;
+        }),
+      ),
+    );
   }
 }

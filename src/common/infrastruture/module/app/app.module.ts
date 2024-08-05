@@ -4,6 +4,7 @@ import { SeedModule } from 'src/seed/infrastructure/module/seed.module';
 import { CommonModule } from '../common/common.module';
 import { CharacterModule } from 'src/character/infrastructure/module/character.module';
 import { EpisodeModule } from 'src/episode/infrastructure/module/episode.module';
+import { AppearanceModule } from 'src/appearance/infrastructure/module/appearance.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { EpisodeModule } from 'src/episode/infrastructure/module/episode.module'
     SeedModule,
     CharacterModule,
     EpisodeModule,
+    AppearanceModule,
   ],
 })
 export class AppModule {}

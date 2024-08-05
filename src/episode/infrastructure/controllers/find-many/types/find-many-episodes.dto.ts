@@ -1,26 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsOptional, IsString, Min } from 'class-validator';
-import { CharacterStatus } from 'src/character/application/models/character';
+import { EpisodeStatus } from 'src/episode/application/models/episode';
 
-export class FindManyCharactersDTO {
+export class FindManyEpisodesDTO {
   @ApiProperty()
   @Min(1)
   @Type(() => Number)
-  page: number;
+  page: number = 1;
 
   @ApiProperty({
     required: false,
   })
   @IsString()
   @IsOptional()
-  species?: string;
+  season?: string;
 
   @ApiProperty({
     required: false,
   })
   @IsString()
   @IsOptional()
-  @IsIn([CharacterStatus.ACTIVE, CharacterStatus.SUSPENDED])
-  status?: CharacterStatus;
+  @IsIn([EpisodeStatus.ACTIVE, EpisodeStatus.CANCELLED])
+  status?: EpisodeStatus;
 }

@@ -11,6 +11,24 @@ export class CharacterStatusRepositoryPostgres
 {
   constructor(private prisma: PrismaService) {}
 
+  async getById(id: string): Promise<Optional<CharacterStatusModel>> {
+    const status = await this.prisma.status.findFirst({
+      where: { id: id },
+    });
+
+    if (!status) {
+      return undefined;
+    }
+
+    return {
+      id: status.id,
+      name:
+        status.name === 'ACTIVE_C'
+          ? CharacterStatus.ACTIVE
+          : CharacterStatus.SUSPENDED,
+    };
+  }
+
   async getByName(
     name: CharacterStatus,
   ): Promise<Optional<CharacterStatusModel>> {

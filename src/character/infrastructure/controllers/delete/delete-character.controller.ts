@@ -12,20 +12,30 @@ import {
 import { ErrorDecorator } from 'src/common/application/decorators/error.handler.decorator';
 import { DeleteCharacterCommand } from 'src/character/application/commands/delete/delete-character.command';
 import { CharacterRepositoryPostgres } from '../../repositories/postgres/chatacter.repository';
+import { SpeciesRepositoryPostgres } from '../../repositories/postgres/species.repository';
+import { CharacterStatusRepositoryPostgres } from '../../repositories/postgres/status.repository';
 
 @ApiTags(CHARACTER_API_TAG)
 @Controller(CHARACTER_PREFIX)
 export class DeleteCharacterController
   implements ControllerContract<[param: string], DeleteCharacterResponse>
 {
-  constructor(private characterRepository: CharacterRepositoryPostgres) {}
+  constructor(
+    private characterRepository: CharacterRepositoryPostgres,
+    private speciesRepository: SpeciesRepositoryPostgres,
+    private statusRepository: CharacterStatusRepositoryPostgres,
+  ) {}
 
   @Delete(':id')
   async execute(
     @Param('id', ParseUUIDPipe) param: string,
   ): Promise<DeleteCharacterResponse> {
     const result = await new ErrorDecorator(
-      new DeleteCharacterCommand(this.characterRepository),
+      new DeleteCharacterCommand(
+        this.characterRepository,
+        this.speciesRepository,
+        this.statusRepository,
+      ),
       (e) => new HttpException(e.message, 400),
     ).execute({ id: param });
 

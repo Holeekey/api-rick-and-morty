@@ -9,4 +9,5 @@ export type FindOneEpisodeResponse = {
   status: EpisodeStatus;
   minutesDuration: number;
   secondsDuration: number;
+  appearancesId: string[];
 };

@@ -1,5 +1,5 @@
 import { ControllerContract } from 'src/common/infrastruture/controller/contract/controller.contract';
-import { FindOneEpisodeResponse } from 'src/episode/application/queries/find-one/types/response';
+import { FindOneEpisodeResponse } from './response/find-one-episode.response';
 import { EpisodeRepositoryPostgres } from '../../repositories/episode.repository';
 import { EpisodeStatusRepositoryPostgres } from '../../repositories/status.repository';
 import { SeasonRepositoryPostgres } from '../../repositories/season.repository';
@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ErrorDecorator } from 'src/common/application/decorators/error.handler.decorator';
 import { FindOneEpisodeQuery } from 'src/episode/application/queries/find-one/find-one-episode.query';
+import { durationToString } from 'src/common/infrastruture/utils/duration.to.string';
 
 @ApiTags(EPISODE_API_TAG)
 @Controller(EPISODE_PREFIX)
@@ -41,6 +42,24 @@ export class FindOneEpisodeController
       id: param,
     });
 
-    return result.unwrap();
+    const episode = result.unwrap();
+
+    const baseUrl = process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/';
+
+    return {
+      id: episode.id,
+      name: episode.name,
+      code: episode.code,
+      aireDate: episode.aireDate,
+      season: episode.season,
+      status: episode.status,
+      duration: durationToString(
+        episode.minutesDuration,
+        episode.secondsDuration,
+      ),
+      appearancesUrl: episode.appearancesId.map(
+        (a) => baseUrl + 'appearance/' + a,
+      ),
+    };
   }
 }
