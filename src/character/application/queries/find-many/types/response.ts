@@ -10,4 +10,5 @@ export type FindManyCharactersResponse = {
   species: string;
   gender: Gender;
   createdAt: Date;
+  appearancesId: string[];
 };

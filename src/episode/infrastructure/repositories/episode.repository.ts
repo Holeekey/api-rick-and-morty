@@ -102,9 +102,15 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
       },
     });
 
-    const episodes = episodesORM.map(
-      (e) =>
-        ({
+    const episodes = Promise.all(
+      episodesORM.map(async (e) => {
+        const appearancesId = (
+          await this.prisma.appearance.findMany({
+            where: { episodeId: e.id },
+          })
+        ).map((a) => a.id);
+
+        return {
           id: e.id,
           name: e.name,
           aireDate: e.aireDate,
@@ -113,7 +119,9 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
           secondsDuration: e.secondsDuration,
           seasonId: e.seasonId,
           statusId: e.epsiodeStatusId,
-        }) as Episode,
+          appearancesId: appearancesId,
+        } as Episode;
+      }),
     );
 
     return episodes;
@@ -122,6 +130,12 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
     const episode = await this.prisma.episode.findUnique({ where: { id: id } });
 
     if (!episode) return undefined;
+
+    const appearancesId = (
+      await this.prisma.appearance.findMany({
+        where: { episodeId: episode.id },
+      })
+    ).map((a) => a.id);
 
     return {
       id: episode.id,
@@ -132,6 +146,7 @@ export class EpisodeRepositoryPostgres implements EpisodeRepository {
       statusId: episode.epsiodeStatusId,
       minutesDuration: episode.minutesDuration,
       secondsDuration: episode.secondsDuration,
+      appearancesId: appearancesId,
     };
   }
   async save(episode: Episode): Promise<Result<Episode>> {

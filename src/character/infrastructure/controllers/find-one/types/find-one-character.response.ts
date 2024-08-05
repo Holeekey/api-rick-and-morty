@@ -6,9 +6,9 @@ import {
 export type FindOneCharacterResponse = {
   id: string;
   name: string;
-  status: CharacterStatus;
   species: string;
+  status: CharacterStatus;
   gender: Gender;
   createdAt: Date;
-  appearancesId: string[];
+  appearancesUrl: string[];
 };

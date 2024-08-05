@@ -51,10 +51,11 @@ export class FindManyEpisodesController
     const nextPage = query.page + 1;
     const prevPage = query.page - 1;
 
-    const baseUrl =
-      process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/episode/';
+    const baseUrl = process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/';
 
-    const pageQuery = '?page';
+    const baseUrlWithEpisodePrefix = baseUrl + 'episode/';
+
+    const pageQuery = '?page=';
 
     const seasonQuery = query.season ? '&season=' + query.season : '';
     const statusQuery = query.status ? '&status=' + query.status : '';
@@ -68,7 +69,7 @@ export class FindManyEpisodesController
         next:
           nextPage > pages
             ? null
-            : baseUrl +
+            : baseUrlWithEpisodePrefix +
               pageQuery +
               (query.page + 1) +
               seasonQuery +
@@ -76,7 +77,7 @@ export class FindManyEpisodesController
         prev:
           prevPage <= 0
             ? null
-            : baseUrl +
+            : baseUrlWithEpisodePrefix +
               pageQuery +
               (query.page - 1) +
               seasonQuery +
@@ -91,7 +92,10 @@ export class FindManyEpisodesController
           season: e.season,
           status: e.status,
           duration: durationToString(e.minutesDuration, e.secondsDuration),
-          url: baseUrl + e.id,
+          url: baseUrlWithEpisodePrefix + e.id,
+          appearancesUrl: e.appearancesId.map(
+            (a) => baseUrl + 'appearance/' + a,
+          ),
         };
       }),
     };

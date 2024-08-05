@@ -35,6 +35,7 @@ export class FindOneCharacterQuery
       status: (await this.statusRepository.getById(possibleCharacter.statusId))
         .name,
       createdAt: possibleCharacter.createdAt,
+      appearancesId: possibleCharacter.appearancesId,
     });
   }
 }

@@ -33,6 +33,7 @@ export class CreateCharacterCommand
       statusId: (await this.statusRepository.getByName(CharacterStatus.ACTIVE))
         .id,
       createdAt: this.dateProvider.current,
+      appearancesId: [],
     };
 
     if (await this.characterRepository.existsBySpeciesAndStatus(character)) {

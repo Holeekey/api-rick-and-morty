@@ -9,4 +9,5 @@ export type FindManyEpisodesResponse = {
   status: EpisodeStatus;
   minutesDuration: number;
   secondsDuration: number;
+  appearancesId: string[];
 };

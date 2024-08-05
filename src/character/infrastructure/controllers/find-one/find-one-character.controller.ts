@@ -5,7 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { FindOneCharacterResponse } from 'src/character/application/queries/find-one/types/response';
+import { FindOneCharacterResponse } from './types/find-one-character.response';
 import { ControllerContract } from 'src/common/infrastruture/controller/contract/controller.contract';
 import { CHARACTER_PREFIX, CHARACTER_API_TAG } from '../prefix';
 import { ApiTags } from '@nestjs/swagger';
@@ -41,6 +41,20 @@ export class FindOneCharacterController
       id: param,
     });
 
-    return result.unwrap();
+    const character = result.unwrap();
+
+    const baseUrl = process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/';
+
+    return {
+      id: character.id,
+      name: character.name,
+      species: character.species,
+      status: character.status,
+      gender: character.gender,
+      createdAt: character.createdAt,
+      appearancesUrl: character.appearancesId.map(
+        (a) => baseUrl + 'appearance/' + a,
+      ),
+    };
   }
 }

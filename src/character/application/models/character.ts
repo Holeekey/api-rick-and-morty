@@ -16,4 +16,5 @@ export interface Character {
   speciesId: string;
   gender: Gender;
   createdAt: Date;
+  appearancesId: string[];
 }

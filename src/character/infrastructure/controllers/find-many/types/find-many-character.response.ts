@@ -18,5 +18,6 @@ export type FindManyCharactersResponse = {
     gender: Gender;
     createdAt: Date;
     url: string;
+    appearancesUrl: string[];
   }[];
 };

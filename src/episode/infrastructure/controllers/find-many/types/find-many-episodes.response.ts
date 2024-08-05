@@ -16,5 +16,6 @@ export type FindManyEpisodesResponse = {
     status: EpisodeStatus;
     duration: string;
     url: string;
+    appearancesUrl: string[];
   }[];
 };
