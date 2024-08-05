@@ -59,32 +59,18 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
       skip: (page - 1) * perPage,
     });
 
-    const characters = Promise.all(
-      charactersORM.map(async (c) => {
-        const statusORMName = (
-          await this.prisma.status.findFirst({
-            where: { id: c.characterStatusId },
-          })
-        ).name;
+    const characters = charactersORM.map((c) => {
+      const gender = this.genderMapperToModel(c.gender);
 
-        const status = this.statusMapperToModel(statusORMName);
-
-        const gender = this.genderMapperToModel(c.gender);
-
-        return {
-          id: c.id,
-          name: c.name,
-          status: status,
-          createdAt: c.createdAt,
-          gender: gender,
-          species: (
-            await this.prisma.subcategory.findFirst({
-              where: { id: c.speciesId },
-            })
-          ).name,
-        } as Character;
-      }),
-    );
+      return {
+        id: c.id,
+        name: c.name,
+        statusId: c.characterStatusId,
+        createdAt: c.createdAt,
+        gender: gender,
+        speciesId: c.speciesId,
+      } as Character;
+    });
 
     return characters;
   }
@@ -94,50 +80,17 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
       where: { id: id },
     });
 
-    const status = (
-      await this.prisma.status.findUnique({
-        where: { id: characterORM.characterStatusId },
-      })
-    ).name;
-
-    const species = (
-      await this.prisma.subcategory.findUnique({
-        where: { id: characterORM.speciesId },
-      })
-    ).name;
-
     return {
       id: id,
       name: characterORM.name,
       createdAt: characterORM.createdAt,
-      status: this.statusMapperToModel(status),
-      species: species,
+      statusId: characterORM.characterStatusId,
+      speciesId: characterORM.speciesId,
       gender: this.genderMapperToModel(characterORM.gender),
     };
   }
 
   async save(character: Character): Promise<Result<Character>> {
-    const statusId = (
-      await this.prisma.status.findUnique({
-        where: { name: this.statusMapperToORM(character.status) },
-      })
-    ).id;
-
-    const speciesId = (
-      await this.prisma.subcategory.upsert({
-        where: { name: character.species },
-        create: {
-          name: character.species,
-          categoryId: (
-            await this.prisma.category.findUnique({
-              where: { name: 'SPECIES' },
-            })
-          ).id,
-        },
-        update: {},
-      })
-    ).id;
-
     await this.prisma.character.upsert({
       where: {
         id: character.id,
@@ -146,15 +99,15 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
         id: character.id,
         name: character.name,
         gender: this.genderMapperToORM(character.gender),
-        characterStatusId: statusId,
-        speciesId: speciesId,
+        characterStatusId: character.statusId,
+        speciesId: character.speciesId,
         createdAt: character.createdAt,
       },
       update: {
         name: character.name,
         gender: this.genderMapperToORM(character.gender),
-        characterStatusId: statusId,
-        speciesId: speciesId,
+        characterStatusId: character.statusId,
+        speciesId: character.speciesId,
         createdAt: character.createdAt,
       },
     });
@@ -163,26 +116,14 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
   }
 
   async existsBySpeciesAndStatus(character: Character): Promise<boolean> {
-    const possibleSpecies = (
-      await this.prisma.subcategory.findUnique({
-        where: { name: character.species },
-      })
-    )?.id;
-
-    const statusId = (
-      await this.prisma.status.findUnique({
-        where: { name: this.statusMapperToORM(character.status) },
-      })
-    ).id;
-
     const possibleCharacter = await this.prisma.character.findFirst({
       where: {
         id: {
           not: character.id,
         },
         name: character.name,
-        characterStatusId: statusId,
-        speciesId: possibleSpecies,
+        characterStatusId: character.statusId,
+        speciesId: character.speciesId,
       },
     });
 

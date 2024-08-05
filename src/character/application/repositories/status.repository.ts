@@ -4,4 +4,5 @@ import { CharacterStatus } from '../models/character';
 
 export interface CharacterStatusRepository {
   getByName(name: CharacterStatus): Promise<Optional<CharacterStatusModel>>;
+  getById(id: string): Promise<Optional<CharacterStatusModel>>;
 }

@@ -12,8 +12,8 @@ export enum Gender {
 export interface Character {
   id: string;
   name: string;
-  status: CharacterStatus;
-  species: string;
+  statusId: string;
+  speciesId: string;
   gender: Gender;
   createdAt: Date;
 }
