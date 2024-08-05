@@ -14,10 +14,58 @@ import { PrismaService } from 'src/common/infrastruture/database/database.connec
 export class CharacterRepositoryPostgres implements CharacterRepository {
   constructor(private prisma: PrismaService) {}
 
-  private statusMapperToModel(status: string): CharacterStatus {
-    return status === 'ACTIVE_C'
-      ? CharacterStatus.ACTIVE
-      : CharacterStatus.SUSPENDED;
+  async count(species?: string, status?: CharacterStatus): Promise<number> {
+    let statusId;
+    let speciesId;
+
+    if (species && status) {
+      speciesId = (
+        await this.prisma.subcategory.findUnique({ where: { name: species } })
+      ).id;
+
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+
+      return await this.prisma.character.count({
+        where: {
+          speciesId: speciesId,
+          characterStatusId: statusId,
+        },
+      });
+    }
+
+    if (species) {
+      speciesId = (
+        await this.prisma.subcategory.findUnique({ where: { name: species } })
+      ).id;
+
+      return await this.prisma.character.count({
+        where: {
+          speciesId: speciesId,
+        },
+      });
+    }
+
+    if (status) {
+      console.log();
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+      return await this.prisma.character.count({
+        where: {
+          characterStatusId: statusId,
+        },
+      });
+    }
+
+    const count = await this.prisma.character.count();
+
+    return count;
   }
 
   private statusMapperToORM(status: CharacterStatus): string {
