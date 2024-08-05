@@ -54,6 +54,7 @@ export class FindManyCharactersQuery
             status: (await this.statusRepository.getById(c.statusId)).name,
             gender: c.gender,
             createdAt: c.createdAt,
+            appearancesId: c.appearancesId,
           } as FindManyCharactersResponse;
         }),
       ),

@@ -107,18 +107,29 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
       skip: (page - 1) * perPage,
     });
 
-    const characters = charactersORM.map((c) => {
-      const gender = this.genderMapperToModel(c.gender);
+    const characters = Promise.all(
+      charactersORM.map(async (c) => {
+        const gender = this.genderMapperToModel(c.gender);
 
-      return {
-        id: c.id,
-        name: c.name,
-        statusId: c.characterStatusId,
-        createdAt: c.createdAt,
-        gender: gender,
-        speciesId: c.speciesId,
-      } as Character;
-    });
+        const appearancesId = (
+          await this.prisma.appearance.findMany({
+            where: {
+              characterId: c.id,
+            },
+          })
+        ).map((a) => a.id);
+
+        return {
+          id: c.id,
+          name: c.name,
+          statusId: c.characterStatusId,
+          createdAt: c.createdAt,
+          gender: gender,
+          speciesId: c.speciesId,
+          appearancesId,
+        } as Character;
+      }),
+    );
 
     return characters;
   }
@@ -128,6 +139,14 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
       where: { id: id },
     });
 
+    const appearancesId = (
+      await this.prisma.appearance.findMany({
+        where: {
+          characterId: characterORM.id,
+        },
+      })
+    ).map((a) => a.id);
+
     return {
       id: id,
       name: characterORM.name,
@@ -135,6 +154,7 @@ export class CharacterRepositoryPostgres implements CharacterRepository {
       statusId: characterORM.characterStatusId,
       speciesId: characterORM.speciesId,
       gender: this.genderMapperToModel(characterORM.gender),
+      appearancesId: appearancesId,
     };
   }
 

@@ -53,8 +53,9 @@ export class FindManyCharactersController
     const nextPage = query.page + 1;
     const prevPage = query.page - 1;
 
-    const baseUrl =
-      process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/character/';
+    const baseUrl = process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/';
+
+    const baseUrlWithCharacterPrefix = baseUrl + 'character/';
 
     const pageQuery = '?page';
 
@@ -70,7 +71,7 @@ export class FindManyCharactersController
         next:
           nextPage >= pages
             ? null
-            : baseUrl +
+            : baseUrlWithCharacterPrefix +
               pageQuery +
               (query.page + 1) +
               speciesQuery +
@@ -78,7 +79,7 @@ export class FindManyCharactersController
         prev:
           prevPage <= 0
             ? null
-            : baseUrl +
+            : baseUrlWithCharacterPrefix +
               pageQuery +
               (query.page - 1) +
               speciesQuery +
@@ -92,7 +93,10 @@ export class FindManyCharactersController
           status: c.status,
           gender: c.gender,
           createdAt: c.createdAt,
-          url: baseUrl + c.id,
+          url: baseUrlWithCharacterPrefix + c.id,
+          appearancesUrl: c.appearancesId.map(
+            (a) => baseUrl + 'appearance/' + a,
+          ),
         };
       }),
     };
