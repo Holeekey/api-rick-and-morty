@@ -44,6 +44,8 @@ export class FindOneEpisodeController
 
     const episode = result.unwrap();
 
+    const baseUrl = process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/';
+
     return {
       id: episode.id,
       name: episode.name,
@@ -54,6 +56,9 @@ export class FindOneEpisodeController
       duration: durationToString(
         episode.minutesDuration,
         episode.secondsDuration,
+      ),
+      appearancesUrl: episode.appearancesId.map(
+        (a) => baseUrl + 'appearance/' + a,
       ),
     };
   }

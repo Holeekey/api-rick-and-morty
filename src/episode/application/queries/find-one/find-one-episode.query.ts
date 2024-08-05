@@ -34,6 +34,7 @@ export class FindOneEpisodeQuery
       status: (await this.statusRepository.getById(episode.statusId)).name,
       minutesDuration: episode.minutesDuration,
       secondsDuration: episode.secondsDuration,
+      appearancesId: episode.appearancesId,
     });
   }
 }

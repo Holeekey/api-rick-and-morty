@@ -12,4 +12,5 @@ export type Episode = {
   statusId: string;
   minutesDuration: number;
   secondsDuration: number;
+  appearancesId: string[];
 };
