@@ -10,6 +10,42 @@ import { PrismaService } from 'src/common/infrastruture/database/database.connec
 @Injectable()
 export class AppearanceRepositoryPostgres implements AppearanceRepository {
   constructor(private prisma: PrismaService) {}
+  async getMany(
+    page: number,
+    perPage: number,
+    episodeId?: string,
+    characterId?: string,
+    seasonId?: string,
+    episodeStatusId?: string,
+    characterStatusId?: string,
+  ): Promise<Appearance[]> {
+    const appearances = await this.prisma.appearance.findMany({
+      where: {
+        episodeId: episodeId,
+        episode: {
+          epsiodeStatusId: episodeStatusId,
+          seasonId: seasonId,
+        },
+        characterId: characterId,
+        character: {
+          characterStatusId: characterStatusId,
+        },
+      },
+      take: perPage,
+      skip: (page - 1) * perPage,
+    });
+    return appearances.map((a) => {
+      return {
+        id: a.id,
+        characterId: a.characterId,
+        episodeId: a.episodeId,
+        initMinute: a.initMinute,
+        initSecond: a.initSecond,
+        finishMinute: a.finishMinute,
+        finishSecond: a.finishSecond,
+      };
+    });
+  }
 
   async getOne(id: string): Promise<Optional<Appearance>> {
     const possibleAppearance = await this.prisma.appearance.findUnique({

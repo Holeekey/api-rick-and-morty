@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { ErrorDecorator } from 'src/common/application/decorators/error.handler.decorator';
 import { FindOneEpisodeQuery } from 'src/episode/application/queries/find-one/find-one-episode.query';
-import { durationToString } from '../../utils/duration.to.string';
+import { durationToString } from 'src/common/infrastruture/utils/duration.to.string';
 
 @ApiTags(EPISODE_API_TAG)
 @Controller(EPISODE_PREFIX)

@@ -9,7 +9,7 @@ import { FindManyEpisodesQuery } from 'src/episode/application/queries/find-many
 import { EpisodeRepositoryPostgres } from '../../repositories/episode.repository';
 import { SeasonRepositoryPostgres } from '../../repositories/season.repository';
 import { EpisodeStatusRepositoryPostgres } from '../../repositories/status.repository';
-import { durationToString } from '../../utils/duration.to.string';
+import { durationToString } from 'src/common/infrastruture/utils/duration.to.string';
 
 @ApiTags(EPISODE_API_TAG)
 @Controller(EPISODE_PREFIX)
