@@ -9,6 +9,7 @@ import { FindManyEpisodesQuery } from 'src/episode/application/queries/find-many
 import { EpisodeRepositoryPostgres } from '../../repositories/episode.repository';
 import { SeasonRepositoryPostgres } from '../../repositories/season.repository';
 import { EpisodeStatusRepositoryPostgres } from '../../repositories/status.repository';
+import { durationToString } from '../../utils/duration.to.string';
 
 @ApiTags(EPISODE_API_TAG)
 @Controller(EPISODE_PREFIX)
@@ -51,10 +52,14 @@ export class FindManyEpisodesController
     const prevPage = query.page - 1;
 
     const baseUrl =
-      process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/episode/?page=';
+      process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/episode/';
+
+    const pageQuery = '?page';
 
     const seasonQuery = query.season ? '&season=' + query.season : '';
     const statusQuery = query.status ? '&status=' + query.status : '';
+
+    const episodes = result.unwrap();
 
     return {
       info: {
@@ -63,13 +68,32 @@ export class FindManyEpisodesController
         next:
           nextPage > pages
             ? null
-            : baseUrl + (query.page + 1) + seasonQuery + statusQuery,
+            : baseUrl +
+              pageQuery +
+              (query.page + 1) +
+              seasonQuery +
+              statusQuery,
         prev:
           prevPage <= 0
             ? null
-            : baseUrl + (query.page - 1) + seasonQuery + statusQuery,
+            : baseUrl +
+              pageQuery +
+              (query.page - 1) +
+              seasonQuery +
+              statusQuery,
       },
-      results: result.unwrap(),
+      results: episodes.map((e) => {
+        return {
+          id: e.id,
+          name: e.name,
+          code: e.code,
+          aireDate: e.aireDate,
+          season: e.season,
+          status: e.status,
+          duration: durationToString(e.minutesDuration, e.secondsDuration),
+          url: baseUrl + e.id,
+        };
+      }),
     };
   }
 }

@@ -1,4 +1,4 @@
-import { FindManyEpisodesResponse as FindManyEpisodesResponseApp } from 'src/episode/application/queries/find-many/types/response';
+import { EpisodeStatus } from 'src/episode/application/models/episode';
 
 export type FindManyEpisodesResponse = {
   info: {
@@ -7,5 +7,14 @@ export type FindManyEpisodesResponse = {
     next: string;
     prev: string;
   };
-  results: FindManyEpisodesResponseApp[];
+  results: {
+    id: string;
+    name: string;
+    code: string;
+    aireDate: Date;
+    season: string;
+    status: EpisodeStatus;
+    duration: string;
+    url: string;
+  }[];
 };

@@ -54,13 +54,14 @@ export class FindManyCharactersController
     const prevPage = query.page - 1;
 
     const baseUrl =
-      process.env.APP_HOST +
-      ':' +
-      process.env.APP_PORT +
-      '/api/character/?page=';
+      process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/character/';
+
+    const pageQuery = '?page';
 
     const speciesQuery = query.species ? '&species=' + query.species : '';
     const statusQuery = query.status ? '&status=' + query.status : '';
+
+    const characters = result.unwrap();
 
     return {
       info: {
@@ -69,13 +70,31 @@ export class FindManyCharactersController
         next:
           nextPage >= pages
             ? null
-            : baseUrl + (query.page + 1) + speciesQuery + statusQuery,
+            : baseUrl +
+              pageQuery +
+              (query.page + 1) +
+              speciesQuery +
+              statusQuery,
         prev:
           prevPage <= 0
             ? null
-            : baseUrl + (query.page - 1) + speciesQuery + statusQuery,
+            : baseUrl +
+              pageQuery +
+              (query.page - 1) +
+              speciesQuery +
+              statusQuery,
       },
-      results: result.unwrap(),
+      results: characters.map((c) => {
+        return {
+          id: c.id,
+          name: c.name,
+          species: c.species,
+          status: c.status,
+          gender: c.gender,
+          createdAt: c.createdAt,
+          url: baseUrl + c.id,
+        };
+      }),
     };
   }
 }

@@ -1,4 +1,7 @@
-import { FindManyCharactersResponse as FindManyCharactersResponseApp } from 'src/character/application/queries/find-many/types/response';
+import {
+  CharacterStatus,
+  Gender,
+} from 'src/character/application/models/character';
 
 export type FindManyCharactersResponse = {
   info: {
@@ -7,5 +10,13 @@ export type FindManyCharactersResponse = {
     next: string;
     prev: string;
   };
-  results: FindManyCharactersResponseApp[];
+  results: {
+    id: string;
+    name: string;
+    species: string;
+    status: CharacterStatus;
+    gender: Gender;
+    createdAt: Date;
+    url: string;
+  }[];
 };
