@@ -10,6 +10,30 @@ import { PrismaService } from 'src/common/infrastruture/database/database.connec
 @Injectable()
 export class AppearanceRepositoryPostgres implements AppearanceRepository {
   constructor(private prisma: PrismaService) {}
+
+  async count(
+    episodeId?: string,
+    characterId?: string,
+    seasonId?: string,
+    episodeStatusId?: string,
+    characterStatusId?: string,
+  ): Promise<number> {
+    const count = await this.prisma.appearance.count({
+      where: {
+        episodeId: episodeId,
+        episode: {
+          epsiodeStatusId: episodeStatusId,
+          seasonId: seasonId,
+        },
+        characterId: characterId,
+        character: {
+          characterStatusId: characterStatusId,
+        },
+      },
+    });
+    return count;
+  }
+
   async getMany(
     page: number,
     perPage: number,
@@ -131,5 +155,25 @@ export class AppearanceRepositoryPostgres implements AppearanceRepository {
         appearanceTimeLapse,
       );
     });
+  }
+
+  async delete(appearance: Appearance): Promise<Result<Appearance>> {
+    await this.prisma.appearance.delete({ where: { id: appearance.id } });
+
+    return Result.success(appearance);
+  }
+
+  async deleteCharacterAppearancesByEpisode(
+    characterId: string,
+    episodeId: string,
+  ): Promise<number> {
+    const result = await this.prisma.appearance.deleteMany({
+      where: {
+        characterId: characterId,
+        episodeId: episodeId,
+      },
+    });
+
+    return result.count;
   }
 }

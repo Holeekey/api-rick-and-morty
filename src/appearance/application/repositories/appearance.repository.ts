@@ -15,4 +15,9 @@ export interface AppearanceRepository {
   getOne(id: string): Promise<Optional<Appearance>>;
   save(appearance: Appearance): Promise<Result<Appearance>>;
   appearanceOverlaps(appearance: Appearance): Promise<boolean>;
+  delete(appearance: Appearance): Promise<Result<Appearance>>;
+  deleteCharacterAppearancesByEpisode(
+    characterId: string,
+    episodeId: string,
+  ): Promise<number>;
 }

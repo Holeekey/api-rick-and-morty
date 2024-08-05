@@ -36,7 +36,7 @@ export class FindManyAppearancesController
 
     const baseUrlWithAppearancePrefix = baseUrl + APPEARANCE_PREFIX + '/';
 
-    const pageQuery = '?page';
+    const pageQuery = '?page=';
 
     const characterIdQuery = query.characterId
       ? '&characterId=' + query.characterId
@@ -56,12 +56,45 @@ export class FindManyAppearancesController
       ? '&episodeStatusId=' + query.episodeStatusId
       : '';
 
+    const count = await this.appearanceRepository.count(
+      query.episodeId,
+      query.characterId,
+      query.seasonId,
+      query.episodeStatusId,
+      query.characterStatusId,
+    );
+
+    const pages = Math.ceil(count / 5);
+
+    const nextPage = query.page + 1;
+    const prevPage = query.page - 1;
+
     return {
       info: {
-        count: 0,
-        pages: 0,
-        next: null,
-        prev: null,
+        count: count,
+        pages: pages,
+        next:
+          nextPage > pages
+            ? null
+            : baseUrlWithAppearancePrefix +
+              pageQuery +
+              nextPage +
+              characterIdQuery +
+              episodeIdQuery +
+              seasonIdQuery +
+              characterStatusIdQuery +
+              episodeStatusIdQuery,
+        prev:
+          prevPage <= 0
+            ? null
+            : baseUrlWithAppearancePrefix +
+              pageQuery +
+              prevPage +
+              characterIdQuery +
+              episodeIdQuery +
+              seasonIdQuery +
+              characterStatusIdQuery +
+              episodeStatusIdQuery,
       },
       results: appearances.map((a) => {
         return {

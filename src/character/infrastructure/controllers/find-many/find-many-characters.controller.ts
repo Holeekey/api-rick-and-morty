@@ -57,7 +57,7 @@ export class FindManyCharactersController
 
     const baseUrlWithCharacterPrefix = baseUrl + 'character/';
 
-    const pageQuery = '?page';
+    const pageQuery = '?page=';
 
     const speciesQuery = query.species ? '&species=' + query.species : '';
     const statusQuery = query.status ? '&status=' + query.status : '';

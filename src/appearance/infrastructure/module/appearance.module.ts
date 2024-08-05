@@ -7,6 +7,8 @@ import { CreateAppearanceController } from '../controllers/create/create-appeara
 import { UpdateAppearanceController } from '../controllers/update/update-appearance.controller';
 import { FindManyAppearancesController } from '../controllers/find-many/find-many-appearances.controller';
 import { FindOneAppearanceController } from '../controllers/find-one/find-one-appearance.controller';
+import { DeleteOneAppearanceController } from '../controllers/delete-one/delete-one-appearance.controller';
+import { DeleteCharacterAppearancesByEpisodeController } from '../controllers/delete-character-by-episode/delete-character-appearances-by-episode.controller';
 
 @Module({
   controllers: [
@@ -14,6 +16,8 @@ import { FindOneAppearanceController } from '../controllers/find-one/find-one-ap
     UpdateAppearanceController,
     FindManyAppearancesController,
     FindOneAppearanceController,
+    DeleteOneAppearanceController,
+    DeleteCharacterAppearancesByEpisodeController,
   ],
   providers: [
     CharacterRepositoryByAppearancePostgres,
