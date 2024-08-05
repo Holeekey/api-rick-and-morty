@@ -3,12 +3,31 @@ import { Appearance } from 'src/appearance/application/models/appearance';
 import { AppearanceRepository } from 'src/appearance/application/repositories/appearance.repository';
 import { firstTimeLapseInsideSecond } from 'src/appearance/application/utils/time-laps-overlap';
 import { TimeLapse } from 'src/appearance/application/utils/types/time-lapse';
+import { Optional } from 'src/common/application/optional/optional';
 import { Result } from 'src/common/application/result-handler/result.handler';
 import { PrismaService } from 'src/common/infrastruture/database/database.connection.service';
 
 @Injectable()
 export class AppearanceRepositoryPostgres implements AppearanceRepository {
   constructor(private prisma: PrismaService) {}
+
+  async getOne(id: string): Promise<Optional<Appearance>> {
+    const possibleAppearance = await this.prisma.appearance.findUnique({
+      where: { id: id },
+    });
+    if (!possibleAppearance) {
+      return undefined;
+    }
+    return {
+      id: possibleAppearance.id,
+      characterId: possibleAppearance.characterId,
+      episodeId: possibleAppearance.episodeId,
+      initMinute: possibleAppearance.initMinute,
+      initSecond: possibleAppearance.initSecond,
+      finishMinute: possibleAppearance.finishMinute,
+      finishSecond: possibleAppearance.finishSecond,
+    };
+  }
 
   async save(appearance: Appearance): Promise<Result<Appearance>> {
     await this.prisma.appearance.upsert({
@@ -59,8 +78,6 @@ export class AppearanceRepositoryPostgres implements AppearanceRepository {
         second: appearance.finishSecond,
       },
     };
-
-    console.log(characterAppearancesOnEpisode);
 
     return characterAppearancesOnEpisode.some((a) => {
       const appearanceTimeLapse: TimeLapse = {

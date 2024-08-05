@@ -15,7 +15,6 @@ export function firstTimeLapseInsideSecond(
       firstTimeLapse.initMinute,
     )
   ) {
-    console.log('a');
     return true;
   }
 

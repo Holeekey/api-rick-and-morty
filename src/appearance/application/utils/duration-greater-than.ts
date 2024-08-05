@@ -8,14 +8,10 @@ export function firstMinuteGreaterThan(
     return true;
   }
 
-  console.log(firstMinute);
-  console.log(lastMinute);
-
   if (
     firstMinute.minute === lastMinute.minute &&
     firstMinute.second >= lastMinute.second
   ) {
-    console.log('a');
     return true;
   }
 
