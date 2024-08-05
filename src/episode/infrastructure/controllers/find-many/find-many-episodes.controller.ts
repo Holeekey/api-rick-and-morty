@@ -1,6 +1,6 @@
 import { ControllerContract } from 'src/common/infrastruture/controller/contract/controller.contract';
-import { FindManyEpisodesDTO } from './dto/find-many-episodes.dto';
-import { FindManyEpisodesResponse } from 'src/episode/application/queries/find-many/types/response';
+import { FindManyEpisodesDTO } from './types/find-many-episodes.dto';
+import { FindManyEpisodesResponse } from './types/find-many-episodes.response';
 import { EPISODE_PREFIX, EPISODE_API_TAG } from '../prefix';
 import { Controller, Get, HttpException, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -14,10 +14,7 @@ import { EpisodeStatusRepositoryPostgres } from '../../repositories/status.repos
 @Controller(EPISODE_PREFIX)
 export class FindManyEpisodesController
   implements
-    ControllerContract<
-      [query: FindManyEpisodesDTO],
-      FindManyEpisodesResponse[]
-    >
+    ControllerContract<[query: FindManyEpisodesDTO], FindManyEpisodesResponse>
 {
   constructor(
     private episodeRepository: EpisodeRepositoryPostgres,
@@ -28,7 +25,7 @@ export class FindManyEpisodesController
   @Get()
   async execute(
     @Query() query: FindManyEpisodesDTO,
-  ): Promise<FindManyEpisodesResponse[]> {
+  ): Promise<FindManyEpisodesResponse> {
     const result = await new ErrorDecorator(
       new FindManyEpisodesQuery(
         this.episodeRepository,
@@ -43,6 +40,36 @@ export class FindManyEpisodesController
       status: query.status,
     });
 
-    return result.unwrap();
+    const count = await this.episodeRepository.count(
+      query.season,
+      query.status,
+    );
+
+    const pages = Math.ceil(count / 5);
+
+    const nextPage = query.page + 1;
+    const prevPage = query.page - 1;
+
+    const baseUrl =
+      process.env.APP_HOST + ':' + process.env.APP_PORT + '/api/episode/?page=';
+
+    const seasonQuery = query.season ? '&season=' + query.season : '';
+    const statusQuery = query.status ? '&status=' + query.status : '';
+
+    return {
+      info: {
+        count: count,
+        pages: pages,
+        next:
+          nextPage > pages
+            ? null
+            : baseUrl + (query.page + 1) + seasonQuery + statusQuery,
+        prev:
+          prevPage <= 0
+            ? null
+            : baseUrl + (query.page - 1) + seasonQuery + statusQuery,
+      },
+      results: result.unwrap(),
+    };
   }
 }

@@ -1,5 +1,5 @@
 import { PrismaService } from 'src/common/infrastruture/database/database.connection.service';
-import { Episode } from '../../application/models/episode';
+import { Episode, EpisodeStatus } from '../../application/models/episode';
 import { EpisodeRepository } from '../../application/repositories/episode.repository';
 import { Optional } from 'src/common/application/optional/optional';
 import { Result } from 'src/common/application/result-handler/result.handler';
@@ -8,6 +8,64 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class EpisodeRepositoryPostgres implements EpisodeRepository {
   constructor(private prisma: PrismaService) {}
+
+  private statusMapperToORM(status: EpisodeStatus): string {
+    return status === EpisodeStatus.ACTIVE ? 'ACTIVE_E' : 'CANCELLED';
+  }
+
+  async count(season?: string, status?: EpisodeStatus) {
+    let statusId;
+    let seasonId;
+
+    if (season && status) {
+      seasonId = (
+        await this.prisma.subcategory.findUnique({ where: { name: season } })
+      ).id;
+
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+
+      return await this.prisma.episode.count({
+        where: {
+          seasonId: seasonId,
+          epsiodeStatusId: statusId,
+        },
+      });
+    }
+
+    if (season) {
+      seasonId = (
+        await this.prisma.subcategory.findUnique({ where: { name: season } })
+      ).id;
+
+      return await this.prisma.episode.count({
+        where: {
+          seasonId: seasonId,
+        },
+      });
+    }
+
+    if (status) {
+      console.log();
+      statusId = (
+        await this.prisma.status.findUnique({
+          where: { name: this.statusMapperToORM(status) },
+        })
+      ).id;
+      return await this.prisma.episode.count({
+        where: {
+          epsiodeStatusId: statusId,
+        },
+      });
+    }
+
+    const count = await this.prisma.episode.count();
+
+    return count;
+  }
 
   async upsertSeason(season: string) {
     await this.prisma.subcategory.upsert({
